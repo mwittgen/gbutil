@@ -10,7 +10,7 @@
 export CXX
 export OPTFLAGS
 
-ABS_INCLUDES = -I $(FFTW_DIR)/include -I $(TMV_DIR)/include -I $(YAML_DIR)/include
+ABS_INCLUDES = -I $(FFTW_DIR)/include -I $(TMV_DIR)/include -I $(YAML_DIR)/include -I $(EIGEN_DIR)
 
 ifdef MKL_DIR
 ABS_INCLUDES += -I $(MKL_DIR)/include
@@ -20,7 +20,7 @@ SUBDIRS =
 
 INCLUDES = 
 
-CXXFLAGS = $(OPTFLAGS) $(ABS_INCLUDES) $(INCLUDES)
+CXXFLAGS = $(OPTFLAGS) $(ABS_INCLUDES) $(INCLUDES) 
 
 SRC = $(shell ls *.cpp)
 
@@ -33,10 +33,15 @@ all: $(OBJ)
 LIB_DIRS = -L $(CFITSIO_DIR)/lib -L $(TMV_DIR)/lib -L $(FFTW_DIR)/lib \
 	-L $(YAML_DIR)/lib
 TMV_LINK := $(shell cat $(TMV_DIR)/share/tmv/tmv-link)
-CXXFLAGS = $(OPTFLAGS) $(ABS_INCLUDES) $(INCLUDES)
 LIBS = -lm $(LIB_DIRS) -lyaml-cpp -lfftw3 -lcfitsio -ltmv_symband $(TMV_LINK)
 
 test_lookup: test_lookup.o $(OBJ) 
+	$(CXX) $(CXXFLAGS) $^  $(LIBS) -o $@
+
+testLinalg: testLinalg.o 
+	$(CXX) $(CXXFLAGS) $^  $(LIBS) -o $@
+
+testLinalg2: testLinalg2.o 
 	$(CXX) $(CXXFLAGS) $^  $(LIBS) -o $@
 
 ###############################################################
