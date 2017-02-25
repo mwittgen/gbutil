@@ -2,7 +2,7 @@
 #include "StringStuff.h"
 
 using namespace poly2d;
-
+using namespace linalg;
 
 /////////////////////////////////////////////////////////////////////
 // Serialization

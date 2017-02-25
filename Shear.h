@@ -10,7 +10,7 @@
 #ifndef SHEAR_H
 #define SHEAR_H
 #include <math.h>
-#include "UseTMV.h"
+#include "LinearAlgebra.h"
 #include "Bounds.h"
 
 // Shear is represented internally by e1 and e2, which are the second-moment
@@ -106,8 +106,8 @@ class Shear {
   // Vector-arithmetic versions of the above.  Matrices are dimensions (2,nPts)
   // giving x and y coords in rows 0, 1 respectively.
   // Output matrix will be resized if needed.
-  void fwd(const DMatrix& in, DMatrix& out) const;
-  void inv(const DMatrix& in, DMatrix& out) const;
+  void fwd(const linalg::DMatrix& in, linalg::DMatrix& out) const;
+  void inv(const linalg::DMatrix& in, linalg::DMatrix& out) const;
 
   // Get matrix representation of the forward transformation.
   // Matrix is   ... and in limit of small shear:
@@ -199,14 +199,14 @@ class Ellipse {
 
   // Return the 2x2 matrix that implements the forward transformation
   // of this ellipse (apart from the translation)
-  DMatrix getMatrix() const;
+  linalg::DMatrix getMatrix() const;
 
   // Utility to return the Ellipse that corresponds to an arbitrary 2x2
   // matrix.  One version returns the rotation that must precede the
   // Ellipse in the transform, if matrix is asymmetric.
-  static Ellipse fromMatrix(const DMatrix& m, 
+  static Ellipse fromMatrix(const linalg::DMatrix& m, 
 			    double& rotation, bool& parity);
-  static Ellipse fromMatrix(const DMatrix& m) {
+  static Ellipse fromMatrix(const linalg::DMatrix& m) {
     double junk; bool p; return fromMatrix(m, junk, p);
   }
 

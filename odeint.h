@@ -3,42 +3,42 @@
 #ifndef ODEINT_H
 #define ODEINT_H
 
-#include "UseTMV.h"
+#include "LinearAlgebra.h"
 
 namespace ode {
 
   class ODEFunction {
   public:
-    virtual DVector operator()(double x, const DVector& y) const =0;
+    virtual linalg::DVector operator()(double x, const linalg::DVector& y) const =0;
     virtual int order() const =0;
     virtual ~ODEFunction() {};
   };
 
   extern
-  void rkck(const DVector& y,
-	    const DVector& dydx,
+  void rkck(const linalg::DVector& y,
+	    const linalg::DVector& dydx,
 	    double x,
 	    double h,
-	    DVector& yout,
-	    DVector& yerr,
+	    linalg::DVector& yout,
+	    linalg::DVector& yerr,
 	    const ODEFunction& derivs);
 
   extern
-  void rkqs(DVector& y, 
-	    DVector& dydx,
+  void rkqs(linalg::DVector& y, 
+	    linalg::DVector& dydx,
 	    double& x,
 	    double htry,
 	    double eps,
-	    const DVector yscal,
+	    const linalg::DVector yscal,
 	    double& hdid,
 	    double& hnext,
 	    const ODEFunction& derivs);
 
   // Numerical Recipes driver for adaptive-step Runge-Kutta
   extern
-  void odeint(DVector& ystart,	// Initial values of y's
-	      DVector& xp,	// Vector to be filled with saved x values
-	      DMatrix& yp,	// Matrix to fill with y's at xp's
+  void odeint(linalg::DVector& ystart,	// Initial values of y's
+	      linalg::DVector& xp,	// Vector to be filled with saved x values
+	      linalg::DMatrix& yp,	// Matrix to fill with y's at xp's
 	      double dxsave,	// Minimum dx to save in xp & yp
 	      int& kount,	// Number of steps saved in xp & yp
 	      double x1,	// starting x

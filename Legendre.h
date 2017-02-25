@@ -2,7 +2,7 @@
 #ifndef LEGENDRE_H
 #define LEGENDRE_H
 
-#include "UseTMV.h"
+#include "LinearAlgebra.h"
 
 namespace legendre {
 
@@ -10,9 +10,9 @@ namespace legendre {
   public:
     Legendre(double xmin=-1., double xmax=+1, int order_=2):
       sub((xmin+xmax)*0.5), scale(2./(xmax-xmin)), order(order_) {}
-      DVector operator()(double x) const {
+      lingalg::DVector operator()(double x) const {
       x = scale*(x-sub);
-      DVector out(order+1);
+      linalg::DVector out(order+1);
       if (order>=0) out[0] = 1.;
       if (order>=1) out[1] = x;
       for (int i=2; i<=order; i++)

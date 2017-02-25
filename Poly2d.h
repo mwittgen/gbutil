@@ -1,7 +1,7 @@
 // 2-dimensional polynomials, using matrix algebra.
 #ifndef POLY2D_H
 #define POLY2D_H
-#include "UseTMV.h"
+#include "LinearAlgebra.h"
 #include "Std.h"
 
 #include "yaml-cpp/yaml.h"
@@ -26,19 +26,20 @@ namespace poly2d {
       orderX(orderX_), orderY(orderY_), otype(Each), cm(orderX_+1, orderY_+1, 0.) {}
     // Construct using coefficients from input matrix
     // Matrix dims give poly orders.  Must be square if otype==Sum.
-    Poly2d(DMatrix m_, OrderType otype_=Sum);
+    Poly2d(linalg::DMatrix m_, OrderType otype_=Sum);
     ~Poly2d() {}
-    double evaluate(double x, double y) const {return powers(x,orderX) * (cm * powers(y,orderY));}
+    double evaluate(double x, double y) const {return powers(x,orderX).transpose() * cm * powers(y,orderY);}
     double operator() (double x, double y) const {return evaluate(x,y);}
-    double derivx(double x, double y) const {return derivs(x,orderX) * (cm * powers(y,orderY));}
-    double derivy(double x, double y) const {return powers(x,orderX) * (cm * derivs(y,orderY));}
+    double derivx(double x, double y) const {return derivs(x,orderX).transpose() * cm * powers(y,orderY);}
+    double derivy(double x, double y) const {return powers(x,orderX).transpose() * cm * derivs(y,orderY);}
     // Access coefficients as vector:
     int nCoeffs() const;
-    DVector getC() const {return vectorFromMatrix(cm);}
-    DMatrix getM() const {return cm;}
-    void setC(const DVector& cv) {fillFromVector(cv);}
+    linalg::DVector getC() const {return vectorFromMatrix(cm);}
+    linalg::DMatrix getM() const {return cm;}
+    void setC(const linalg::DVector& cv) {fillFromVector(cv);}
     // derivatives w.r.t. coefficient vector:
-    DVector derivC(double x, double y) const {return vectorFromMatrix(powers(x,orderX) ^ powers(y,orderY));} 
+    linalg::DVector derivC(double x, double y) const {
+      return vectorFromMatrix(powers(x,orderX).outer(powers(y,orderY)));} 
     OrderType getOrderType() const {return otype;}
     int getOrderX() const {return orderX;}
     int getOrderY() const {return orderY;}
@@ -62,12 +63,12 @@ namespace poly2d {
     const int orderX;
     const int orderY;
     const OrderType otype;
-    DMatrix cm;  // coefficients
-    DVector powers(double z, int order) const;
-    DVector derivs(double z, int order) const;
+    linalg::DMatrix cm;  // coefficients
+    linalg::DVector powers(double z, int order) const;
+    linalg::DVector derivs(double z, int order) const;
     // Indexing conventions embodied in these:
-    DVector vectorFromMatrix(const DMatrix& m) const;
-    void fillFromVector(const DVector& v);
+    linalg::DVector vectorFromMatrix(const linalg::DMatrix& m) const;
+    void fillFromVector(const linalg::DVector& v);
   };
 
 } // namespace poly2d

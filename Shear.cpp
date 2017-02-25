@@ -183,11 +183,11 @@ operator<<(istream& is, Shear& s) {
 }
 
 void
-Shear::fwd(const DMatrix& in, DMatrix& out) const {
+Shear::fwd(const linalg::DMatrix& in, linalg::DMatrix& out) const {
   Assert(in.nrows()==2);
   out.resize(in.nrows(), in.ncols());
   calcMatrix();
-  DMatrix fMat(2,2);
+  linalg::DMatrix fMat(2,2);
   fMat(0,0) = matrixA;
   fMat(1,1) = matrixB;
   fMat(0,1) = fMat(1,0) = matrixC;
@@ -195,11 +195,11 @@ Shear::fwd(const DMatrix& in, DMatrix& out) const {
 }
 
 void
-Shear::inv(const DMatrix& in, DMatrix& out) const {
+Shear::inv(const linalg::DMatrix& in, linalg::DMatrix& out) const {
   Assert(in.nrows()==2);
   out.resize(in.nrows(), in.ncols());
   calcMatrix();
-  DMatrix fMat(2,2);
+  linalg::DMatrix fMat(2,2);
   fMat(0,0) = matrixB;
   fMat(1,1) = matrixA;
   fMat(0,1) = fMat(1,0) = -matrixC;
@@ -229,12 +229,12 @@ void Shear::calcMatrix() const {
   hasMatrix = true;
 }
 
-DMatrix
+linalg::DMatrix
 Ellipse::getMatrix() const {
   double a, b, c;
   double scale=exp(mu);
   s.getMatrix(a,b,c);
-  DMatrix m(2,2);
+  linalg::DMatrix m(2,2);
   m(0,0) = a*scale;
   m(1,1) = b*scale;
   m(0,1) = c*scale;
@@ -243,7 +243,7 @@ Ellipse::getMatrix() const {
 }
 
 Ellipse
-Ellipse::fromMatrix(const DMatrix& m, double& rotation, bool& parityFlip) {
+Ellipse::fromMatrix(const linalg::DMatrix& m, double& rotation, bool& parityFlip) {
   Assert(m.nrows()==2 && m.ncols()==2);
   double det = m(0,0)*m(1,1) - m(0,1)*m(1,0);
   parityFlip = false;

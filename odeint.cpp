@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 using namespace ode;
+using namespace linalg;
 
 void
 ode::rkck(const DVector& y,

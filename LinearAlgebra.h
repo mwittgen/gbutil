@@ -13,7 +13,10 @@ These classes will be capable of the following common ops:
 * Matrix/vector/scalar arithmetic with overloads.  Don't expect much in
   the way of type promotion in such cases.
 * Vector dot products via v.dot(w) or v.transpose() * w.  Favor these over
-  v*w, which only TMV overloads to dot product.
+  v*w, which only TMV overloads to dot product.  Note Eigen dot() conjugates
+  v, as does our overload on TMV.
+* Vector outer product via v.outer(w).  May not be as efficient as TMV or Eigen native
+  methods, but be careful that v * w.transpose() will yield an inner product in TMV.
 * Dimensions via rows(), cols(), size(), also TMV-style nrows/cols(), row/colsize()
 * transpose(), conjugate(), adjoint() methods giving views
 * transpose/conjugate/adjointInPlace() or tranpose/conjugat/adjointSelf() methods
@@ -66,7 +69,9 @@ namespace linalg {
     const Vector& adjoint() const {return this->conjugate();}
 
     // "dot" operator is overloaded to op* in TMV
-    T dot(const Vector<T>& rhs) const {return *this * rhs;}
+    T dot(const Vector<T>& rhs) const {return this->conjugate() * rhs;}
+    // outer product:
+    tmv::Matrix<T> outer(const Base& rhs) const {return (*this)^rhs;}
   };
 
   // Fixed-length vector
@@ -102,6 +107,9 @@ namespace linalg {
 
     // "dot" operator is overloaded to op* in TMV
     T dot(const SVector<T,N>& rhs) const {return *this * rhs;}
+    // outer product:
+    template<int N2>
+    tmv::SmallMatrix<T,N,N2> outer(const tmv::SmallVector<T,N>& rhs) const {return (*this)^rhs;}
   };
     
   // Dynamic-size matrix
@@ -177,6 +185,7 @@ namespace linalg {
 #define EIGEN_USE_MKL_ALL
 #endif
 #include "Eigen/Dense"
+#include "Eigen/LU"     // Provides inverse() function
   
 namespace linalg {
   // Dynamic-length vector
@@ -199,6 +208,9 @@ namespace linalg {
     // Map some TMV syntax into Eigen
     Eigen::Block<Base> subVector(int i1, int i2) {return Base::block(i1,0,i2-i1,1);}
     Eigen::Block<const Base> subVector(int i1, int i2) const {return Base::block(i1,0,i2-i1,1);}
+
+    // Define an outer product
+    Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> outer(const Base& rhs) {return *this * rhs.transpose();}
   };
 
   // Fixed-length vector
@@ -220,6 +232,9 @@ namespace linalg {
     // Map some TMV syntax into Eigen
     Eigen::Block<Base> subVector(int i1, int i2) {return Base::block(i1,0,i2-i1,1);}
     Eigen::Block<const Base> subVector(int i1, int i2) const {return Base::block(i1,0,i2-i1,1);}
+    // Define an outer product
+    template <int N2>
+    Eigen::Matrix<T,N,N2> outer(const Eigen::Matrix<T,N2,1>& rhs) {return *this * rhs.transpose();}
   };
   
   // Dynamic-size matrix
