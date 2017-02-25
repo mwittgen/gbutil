@@ -10,30 +10,50 @@
 export CXX
 export OPTFLAGS
 
-ABS_INCLUDES = -I $(FFTW_DIR)/include -I $(TMV_DIR)/include -I $(YAML_DIR)/include -I $(EIGEN_DIR)
+CXXFLAGS := $(OPTFLAGS)
 
-ifdef MKL_DIR
-ABS_INCLUDES += -I $(MKL_DIR)/include
+INCLUDES := -I $(FFTW_DIR)/include -I $(TMV_DIR)/include -I $(YAML_DIR)/include -I $(EIGEN_DIR)
+
+LIBS := -lm
+
+# Collect the includes and libraries we need
+ifdef FFTW_DIR
+CXXFLAGS += -I $(FFTW_DIR)/include
+LIBS += -L $(FFTW_DIR)/lib -lfftw3
+else
+$(error Require FFTW_DIR in environment)
 endif
 
-SUBDIRS = 
+ifdef YAML_DIR
+CXXFLAGS += -I $(YAML_DIR)/include
+LIBS += -L $(YAML_DIR)/lib -lyaml-cpp
+else
+$(error Require YAML_DIR in environment)
+endif
 
-INCLUDES = 
+ifdef TMV_DIR
+CXXFLAGS += -I $(TMV_DIR)/include -D USE_TMV
+LIBS += $(shell cat $(TMV_DIR)/share/tmv/tmv-link) -ltmv_symband 
+endif
 
-CXXFLAGS = $(OPTFLAGS) $(ABS_INCLUDES) $(INCLUDES) 
+ifdef EIGEN_DIR
+CXXFLAGS += -I $(EIGEN_DIR)/include -D USE_EIGEN
+endif
 
-SRC = $(shell ls *.cpp)
+# Check that either TMV or EIGEN are available (ok to have both)
+$(if $(or $(TMV_DIR),$(EIGEN_DIR)), , $(error Need either TMV_DIR or EIGEN_DIR))
+
+ifdef MKL_DIR
+CXXFLAGS += -I $(MKL_DIR)/include -D USE_MKL
+endif
+
+# External directories where we'll need to clean/build dependents
+EXTDIRS = 
 
 OBJ = BinomFact.o fft.o StringStuff.o Poisson.o Table.o Pset.o odeint.o Poly2d.o \
 	Interpolant.o Expressions.o Shear.o Lookup1d.o
 
 all: $(OBJ)
-
-# For building test programs:
-LIB_DIRS = -L $(CFITSIO_DIR)/lib -L $(TMV_DIR)/lib -L $(FFTW_DIR)/lib \
-	-L $(YAML_DIR)/lib
-TMV_LINK := $(shell cat $(TMV_DIR)/share/tmv/tmv-link)
-LIBS = -lm $(LIB_DIRS) -lyaml-cpp -lfftw3 -lcfitsio -ltmv_symband $(TMV_LINK)
 
 test_lookup: test_lookup.o $(OBJ) 
 	$(CXX) $(CXXFLAGS) $^  $(LIBS) -o $@
@@ -48,16 +68,20 @@ testLinalg2: testLinalg2.o
 ## Standard stuff:
 ###############################################################
 
-subs:
-	for dir in $(SUBDIRS); do (cd $$dir && $(MAKE)); done
+exts:
+	for dir in $(EXTDIRS); do (cd $$dir && $(MAKE)); done
 
-depend:
-	for dir in $(SUBDIRS); do (cd $$dir && $(MAKE) depend); done
+local-depend:
 	$(CXX) $(CXXFLAGS) -MM $(SRC) > .$@
 
-clean:
-	for dir in $(SUBDIRS); do (cd $$dir && $(MAKE) clean); done
+depend: local-depend
+	for dir in $(EXTDIRS); do (cd $$dir && $(MAKE) depend); done
+
+local-clean:
 	rm -f *.o *~ core .depend
+
+clean: local-clean
+	for dir in $(EXTDIRS); do (cd $$dir && $(MAKE) clean); done
 
 ifeq (.depend, $(wildcard .depend))
 include .depend

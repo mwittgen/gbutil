@@ -3,7 +3,24 @@
 // in common-named classes that map some of their discrepant
 // functions into common behavior.
 // At least one of USE_TMV or USE_EIGEN must exist, and TMV takes precendence
+// Define USE_MKL to have Eigen use MKL calls.
 
+/***
+In either case the dynamic/static sized Vector/Matrix become available.
+These classes will be capable of the following common ops:
+* Element access through expected methods.  Eigen is range checking unless
+  NDEBUG is set, or EIGEN_NO_DEBUG.
+* Matrix/vector/scalar arithmetic with overloads.  Don't expect much in
+  the way of type promotion in such cases.
+* Vector dot products via v.dot(w) or v.transpose() * w.  Favor these over
+  v*w, which only TMV overloads to dot product.
+* Dimensions via rows(), cols(), size(), also TMV-style nrows/cols(), row/colsize()
+* transpose(), conjugate(), adjoint() methods giving views
+* transpose/conjugate/adjointInPlace() or tranpose/conjugat/adjointSelf() methods
+* Initialization to constant values by additional argument of constructor.
+* setZero(), setIdentity()
+* Anything else that happens to have identical syntax in the two packages.
+**/ 
 #ifndef LINEARALGEBRA_H
 #define LINEARALGEBRA_H
 
@@ -156,6 +173,9 @@ namespace linalg {
 
 #elif defined USE_EIGEN
 
+#ifdef USE_MKL
+#define EIGEN_USE_MKL_ALL
+#endif
 #include "Eigen/Dense"
   
 namespace linalg {
