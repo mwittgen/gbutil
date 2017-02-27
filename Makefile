@@ -58,6 +58,9 @@ all: $(OBJ)
 test_lookup: test_lookup.o $(OBJ) 
 	$(CXX) $(CXXFLAGS) $^  $(LIBS) -o $@
 
+testMarquardt: testMarquardt.o 
+	$(CXX) $(CXXFLAGS) $^  $(LIBS) -o $@
+
 testLinalg: testLinalg.o 
 	$(CXX) $(CXXFLAGS) $^  $(LIBS) -o $@
 

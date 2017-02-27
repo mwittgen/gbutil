@@ -16,14 +16,16 @@
 //#define DEBUG
 
 #include <stdexcept>
-#include "UseTMV.h"
+#include "LinearAlgebra.h"
 #include "Std.h"
-#include "TMV_Sym.h"
 #include "Stopwatch.h"
 
-using tmv::Vector;
-using tmv::Matrix;
-using tmv::SymMatrix;
+#ifdef USE_TMV
+#include "TMV_Sym.h"
+#elif defined USE_EIGEN
+#include "Eigen/Cholesky"
+#endif
+
 
 // An exception class:
 class NoConverge: public std::runtime_error {
@@ -44,6 +46,7 @@ class MarquardtPointSum;
 // (const Vector& a, double& chisq, Vector& beta, Matrix& alpha))
 // to build the alpha/beta/chisq from parameters a.  
 // P is precision of calculation, defaults to double.
+// Only the lower triangle of alpha is used, symmetry assumed.
 // MarquandtPointSum class is below, when you have a point function.
 
 // Call method setSaveMemory(true) to instruct routine to do matrix
@@ -54,6 +57,9 @@ class MarquardtPointSum;
 template <class T=MarquardtPointSum<double>, class P=double>
 class Marquardt {
 public: 
+  typedef linalg::Vector<P> Vector;
+  typedef linalg::Matrix<P> Matrix;
+  
   explicit Marquardt(T& f):
     derivs(f), isFit(false), absTol(DefaultAbsTolerance),
     relTol(DefaultRelTolerance), bestA(0), bestAlpha(0),
@@ -64,11 +70,11 @@ public:
   }
 
   // Does the fit starting at a, returns chisq.  Set the flag to get progress/timing to cerr
-  P fit(Vector<P>& a, int maxIter=DefaultMaxIterations, bool progressToCerr=false);
+  P fit(Vector& a, int maxIter=DefaultMaxIterations, bool progressToCerr=false);
   void setSaveMemory(bool saveMemory_=true) {saveMemory=saveMemory_;}
 
   //Return (pointer to) inverse covariance matrix at last fit
-  const SymMatrix<P>* getAlpha();
+  const Matrix& getAlpha();
   void setAbsTolerance(P t) {absTol=t;}
   void setRelTolerance(P t) {relTol=t;}
   P getAbsTolerance() const {return absTol;}
@@ -87,8 +93,8 @@ private:
   int    maxIter;
 
   // Saved best fit conditions:
-  Vector<P> *bestA;
-  SymMatrix<P> *bestAlpha;		//we're going to save our best alpha
+  Vector *bestA;
+  Matrix *bestAlpha;		//we're going to save our best alpha
   P  bestChisq;
 
   bool isFit;		//set flag if bestA is the best fit.
@@ -98,27 +104,33 @@ private:
 };
 
 template <class T, class P>
-const SymMatrix<P>* 
+const linalg::Matrix<P>&
 Marquardt<T,P>::getAlpha() {
   if (saveMemory || !bestAlpha) {
     // Recalculate bestAlpha with current best params if there is not a stored one:
     if (!bestA) throw std::runtime_error("Marquardt::getAlpha() called with no stored solution");
     int nparam = bestA->size();
-    if (bestAlpha && bestAlpha->size()==nparam) {
-      bestAlpha->setZero();
+    if (bestAlpha && bestAlpha->nrows()==nparam) {
+      // Already have an array for bestAlpha, do nothing
     } else {
-      if (bestAlpha) delete bestAlpha;	//get proper sized matrix
-      bestAlpha = new SymMatrix<P>(nparam);
+      // Make new matrix for bestAlpha
+      if (bestAlpha) delete bestAlpha;
+      bestAlpha = new Matrix(nparam,nparam);
     }
-    Vector<P> bestBeta(nparam);
-    derivs(*bestA,bestChisq,bestBeta,*bestAlpha);	//build all the matrices
+    Vector bestBeta(nparam);
+    //Call subroutine that accumulates alpha, beta
+    derivs(*bestA,bestChisq,bestBeta,*bestAlpha);
   } 
-  return bestAlpha;
+  // Copy the lower triangle into upper before making matrix public:
+  for (int i=0; i<bestA->size(); i++) 
+    for (int j=0; j<i; j++)
+      (*bestAlpha)(j,i) = (*bestAlpha)(i,j);
+  return *bestAlpha;
 }
 
 template <class T, class P>
 P
-Marquardt<T,P>::fit(Vector<P>& a, int maxIter, bool progressToCerr) {
+Marquardt<T,P>::fit(Vector& a, int maxIter, bool progressToCerr) {
   P lambda;
   int nparam = a.size();
 
@@ -126,22 +138,20 @@ Marquardt<T,P>::fit(Vector<P>& a, int maxIter, bool progressToCerr) {
 
   // These are used temporarily during fit():
   P chisq;
-  Vector<P> *bestBeta=0;
+  Vector *bestBeta=0;
   // Discard any old info
   if (bestAlpha) delete bestAlpha;
   // get matrix to save results if we are not conserving memory
   if (!saveMemory) {
-    bestAlpha = new SymMatrix<P>(nparam);
-    bestBeta = new DVector(nparam);
+    bestAlpha = new Matrix(nparam,nparam);
+    bestBeta = new Vector(nparam);
   }
 
-  Vector<P> *beta=new DVector(nparam);
-  SymMatrix<P> *alpha=new SymMatrix<P>(nparam);
-  alpha->divideUsing(tmv::CH);   // Use Cholesky decomposition for fastest inversion
-  if (saveMemory) alpha->divideInPlace();  // In-place avoids doubling memory needs
+  auto beta = new Vector(nparam);
+  auto alpha= new Matrix(nparam,nparam);
 
   if (bestA) delete bestA;
-  bestA = new DVector(a);
+  bestA = new Vector(a);
   isFit = false;
   lastDropWasSmall=false;
 
@@ -153,7 +163,7 @@ Marquardt<T,P>::fit(Vector<P>& a, int maxIter, bool progressToCerr) {
   if (saveMemory) 
     derivs(a,bestChisq,*beta,*alpha);
   else
-    derivs(a,bestChisq,*bestBeta,*bestAlpha);	//build all the matrices
+    derivs(a,bestChisq,*bestBeta,*bestAlpha);
   if (progressToCerr) {
     timer.stop();
     cerr << "done in " << timer << " sec" 
@@ -192,17 +202,31 @@ Marquardt<T,P>::fit(Vector<P>& a, int maxIter, bool progressToCerr) {
       cerr << "## Marquart iteration " << i << " inversion...";
     }
 
-    *beta /= *alpha;
-
+    // Solve linear system and get new parameters.
+#ifdef USE_TMV
+    {
+      // Make a symmetric view into alpha for Cholesky:
+      auto s = tmv::SymMatrixViewOf(*alpha,tmv::Lower);
+      s.divideUsing(tmv::CH);
+      if (saveMemory) s.divideInPlace();
+      *beta /= s;
+    } 
+    a = *bestA + *beta;
+#elif defined USE_EIGEN
+    if (saveMemory) {
+      // In-place solution of alpha
+      Eigen::LLT<Eigen::Ref<typename Matrix::Base>> llt(*alpha);
+      a = *bestA + llt.solve(*beta);
+    } else {
+      a = *bestA + alpha->llt().solve(*beta);
+    }
+#endif
+    
     if (progressToCerr) {
       timer.stop();
       cerr << "done in " << timer << " sec" << endl;
     }
 
-    // Seems necessary for TMV to work:
-    if (saveMemory)  alpha->unsetDiv();
-
-    a = *bestA + *beta;
 
     // Get chisq and derivs at the new spot
     if (progressToCerr) {
@@ -299,37 +323,39 @@ Marquardt<T,P>::isConverged(P chisq) {
 // Create this object with the data and pointer to the derivative function.
 template <class P=double>
 class MarquardtPointSum {
+  typedef linalg::Vector<P> Vector;
+  typedef linalg::Matrix<P> Matrix;
 private:
-  const Vector<P>& x;
-  const Vector<P>& y;
-  const Vector<P>& sig;
-  Vector<P> isig;
-  void (*func)(const Vector<P>& a,
+  const Vector& x;
+  const Vector& y;
+  const Vector& sig;
+  Vector isig;
+  void (*func)(const Vector& a,
 	       const P xpt,
 	       P& ypt,
-	       Vector<P>& dpt);
+	       Vector& dpt);
 public:
-  MarquardtPointSum(const Vector<P>& _x, 
-		    const Vector<P>& _y, 
-		    const Vector<P>& _sig,
-		    void (*f)(const Vector<P>& a,
+  MarquardtPointSum(const Vector& _x, 
+		    const Vector& _y, 
+		    const Vector& _sig,
+		    void (*f)(const Vector& a,
 			      const P xpt,
 			      P& ypt,
-			      Vector<P>& dpt)):
+			      Vector& dpt)):
     x(_x), y(_y), sig(_sig), func(f), isig(x.size()) {
     if (y.size() < x.size() || sig.size() < x.size())
       throw std::runtime_error("Data or Sigma vector size mismatch in "
 			       "MarquandtPointSum");
     for (int i=0; i<x.size(); i++) isig[i] = pow(sig[i],-2.);
   }
-  void operator() (const Vector<P>& a, 
+  void operator() (const Vector& a, 
 		   P& chisq, 
-		   Vector<P>& beta, 
-		   SymMatrix<P>& alpha) const {
+		   Vector& beta, 
+		   Matrix& alpha) const {
     chisq = 0;
     beta.setZero();
     alpha.setZero();
-    Vector<P> derivs(a.size());
+    Vector derivs(a.size());
     P yfit;
     for (int k=0; k<x.size(); k++) {
       func(a, x[k], yfit, derivs);
@@ -337,7 +363,7 @@ public:
       chisq += yfit*yfit*isig[k];
       for (int i=0; i<a.size(); i++) {
 	beta[i] += yfit*derivs[i]*isig[k];
-	for (int j=0; j<=i; j++) 
+	for (int j=0; j<=i; j++) // Change to rank1Update ???
 	  alpha(i,j)+=derivs[i]*derivs[j]*isig[k];
       }
     }
