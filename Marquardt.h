@@ -64,6 +64,9 @@ public:
     derivs(f), isFit(false), absTol(DefaultAbsTolerance),
     relTol(DefaultRelTolerance), bestA(0), bestAlpha(0),
     saveMemory(false) {}
+  // No copying:
+  Marquardt(const Marquardt& rhs) =delete;
+  void operator=(const Marquardt& rhs) =delete;
   ~Marquardt() {
     if (bestAlpha) delete bestAlpha;
     if (bestA) delete bestA;
@@ -73,7 +76,7 @@ public:
   P fit(Vector& a, int maxIter=DefaultMaxIterations, bool progressToCerr=false);
   void setSaveMemory(bool saveMemory_=true) {saveMemory=saveMemory_;}
 
-  //Return (pointer to) inverse covariance matrix at last fit
+  //Return (reference to) inverse covariance matrix at last fit
   const Matrix& getAlpha();
   void setAbsTolerance(P t) {absTol=t;}
   void setRelTolerance(P t) {relTol=t;}
@@ -81,9 +84,6 @@ public:
   P getRelTolerance() const {return relTol;}
 
 private:
-  // private copy/assignment to keep it from happening
-  Marquardt(const Marquardt& m) {}
-  void operator=(const Marquardt& rhs) {}
   // The object returning alpha/beta:
   T& derivs;
 
@@ -355,17 +355,24 @@ public:
     chisq = 0;
     beta.setZero();
     alpha.setZero();
+    // Define a symmetric matrix view to fill just lower triangle
+#ifdef USE_TMV
+    auto s = tmv::SymMatrixViewOf(alpha, tmv::Lower);
+#elif defined USE_EIGEN
+    auto s = alpha.template selfadjointView<Eigen::Lower>();
+#endif
     Vector derivs(a.size());
     P yfit;
     for (int k=0; k<x.size(); k++) {
       func(a, x[k], yfit, derivs);
       yfit = y[k] - yfit;
       chisq += yfit*yfit*isig[k];
-      for (int i=0; i<a.size(); i++) {
-	beta[i] += yfit*derivs[i]*isig[k];
-	for (int j=0; j<=i; j++) // Change to rank1Update ???
-	  alpha(i,j)+=derivs[i]*derivs[j]*isig[k];
-      }
+      beta += (yfit*isig[k])*derivs;
+#ifdef USE_TMV
+      tmv::Rank1Update<true>(isig[k], derivs, s);
+#elif defined USE_EIGEN
+      s.rankUpdate(derivs, isig[k]);
+#endif
     }
   }
 };

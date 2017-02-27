@@ -58,7 +58,10 @@ all: $(OBJ)
 test_lookup: test_lookup.o $(OBJ) 
 	$(CXX) $(CXXFLAGS) $^  $(LIBS) -o $@
 
-testMarquardt: testMarquardt.o 
+tests/testMarquardt.o: tests/testMarquardt.cpp
+	$(CXX) $(CXXFLAGS) -I . -c $^ -o $@
+
+tests/testMarquardt: tests/testMarquardt.o 
 	$(CXX) $(CXXFLAGS) $^  $(LIBS) -o $@
 
 testLinalg: testLinalg.o 
@@ -81,7 +84,7 @@ depend: local-depend
 	for dir in $(EXTDIRS); do (cd $$dir && $(MAKE) depend); done
 
 local-clean:
-	rm -f *.o *~ core .depend
+	rm -f *.o *~ core .depend tests/*.o
 
 clean: local-clean
 	for dir in $(EXTDIRS); do (cd $$dir && $(MAKE) clean); done
