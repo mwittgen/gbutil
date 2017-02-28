@@ -12,8 +12,6 @@ export OPTFLAGS
 
 CXXFLAGS := $(OPTFLAGS)
 
-INCLUDES := -I $(FFTW_DIR)/include -I $(TMV_DIR)/include -I $(YAML_DIR)/include -I $(EIGEN_DIR)
-
 LIBS := -lm
 
 # Collect the includes and libraries we need

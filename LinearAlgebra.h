@@ -35,6 +35,11 @@ These classes will be capable of the following common ops:
 #include "TMV.h"
 #include "TMV_Sym.h"
 
+// Use macros for real/imag part because I'm too lazy to do the overloading
+// for only complex types.
+#define REAL realPart()
+#define IMAG imagPart()
+
 namespace linalg {
   // Dynamic-length vector
   template <typename T>
@@ -82,6 +87,7 @@ namespace linalg {
     typedef SVector Type;
     typedef tmv::SmallVector<T,N> Base;
     // Pass constructors to base class
+    SVector() =default;
     SVector(T val): Base(val) {}
     // Conversion from base class
     SVector(const Base& v): tmv::SmallVector<T,N>(v) {}
@@ -129,7 +135,8 @@ namespace linalg {
 
     // Conversions for any type that base class can do:
     template <class Other>
-    explicit Matrix(const Other& m): Base(m) {}
+    Matrix(const Other& m): Base(m) {}
+    //explicit Matrix(const Other& m): Base(m) {}
     template <class Other>
     Type& operator=(const Other& m) {Base::operator=(m); return *this;}
 
@@ -143,6 +150,7 @@ namespace linalg {
     int cols() const {return Base::ncols();}
     tmv::VectorView<T>& diagonal() {return Base::diag();}
     tmv::ConstVectorView<T>& diagonal() const {return Base::diag();}
+    T determinant() const {return Base::det();}
   };
 
   // Fixed-size matrix
@@ -152,6 +160,7 @@ namespace linalg {
     typedef SMatrix Type;
     typedef tmv::SmallMatrix<T,N1,N2> Base;
     // Pass constructors to base class
+    SMatrix() =default;
     SMatrix(T val): Base(val) {}
     // Conversion from base class
     SMatrix(const Base& m): Base(m) {}
@@ -175,6 +184,7 @@ namespace linalg {
     int cols() const {return Base::ncols();}
     tmv::VectorView<T>& diagonal() {return Base::diag();}
     tmv::ConstVectorView<T>& diagonal() const {return Base::diag();}
+    T determinant() const {return Base::det();}
   };
 
 } // namespace linalg  
@@ -187,6 +197,11 @@ namespace linalg {
 #include "Eigen/Dense"
 #include "Eigen/LU"     // Provides inverse() function
   
+// Use macros for real/imag part because I'm too lazy to do the overloading
+// for only complex types.
+#define REAL real()
+#define IMAG imag()
+
 namespace linalg {
   // Dynamic-length vector
   template <typename T>
@@ -201,7 +216,7 @@ namespace linalg {
     Vector(const Base& v): Base(v) {}
     Vector(const Base&& v): Base(v) {}  // Move constructor from TMV vector
     template <class Other>
-    explicit Vector(const Other& o): Base(o) {}
+    /*explicit*/ Vector(const Other& o): Base(o) {}
     template <class Other>
     Type& operator=(const Other& o) {Base::operator=(o); return *this;}
     
@@ -220,12 +235,13 @@ namespace linalg {
     typedef SVector Type;
     typedef Eigen::Matrix<T,N,1> Base;
     // Pass constructors to base class
+    SVector() =default;
     SVector(T val): Base(Base::Constant(val)) {}
     // Conversion from base class
     SVector(const Base& v): Base(v) {}
     SVector(const Base&& v): Base(v) {}  // Move constructor from TMV vector
     template <class Other>
-    explicit SVector(const Other& o): Base(o) {}
+    /*explicit*/ SVector(const Other& o): Base(o) {}
     template <class Other>
     Type& operator=(const Other& o) {Base::operator=(o); return *this;}
     
@@ -250,7 +266,7 @@ namespace linalg {
     Matrix(const Base& v): Base(v) {}
     Matrix(const Base&& v): Base(v) {}  // Move constructor from TMV vector
     template <class Other>
-    explicit Matrix(const Other& o): Base(o) {}
+    /*explicit*/ Matrix(const Other& o): Base(o) {}
     template <class Other>
     Type& operator=(const Other& o) {Base::operator=(o); return *this;}
     
@@ -261,6 +277,7 @@ namespace linalg {
     int ncols() const {return Base::cols();}
     int colsize() const {return Base::rows();}
     int rowsize() const {return Base::cols();}
+    T det() const {return Base::determinant();}
     Type& setToIdentity() {Base::setIdentity(); return *this;}
     // diag()
   };
@@ -272,12 +289,13 @@ namespace linalg {
     typedef SMatrix Type;
     typedef Eigen::Matrix<T,N1,N2> Base;
     // Pass constructors to base class
+    SMatrix() =default;
     SMatrix(T val): Base(Base::Constant(val)) {}
     // Conversion from base class
     SMatrix(const Base& v): Base(v) {}
     SMatrix(const Base&& v): Base(v) {}  // Move constructor from TMV vector
     template <class Other>
-    explicit SMatrix(const Other& o): Base(o) {}
+    /*explicit*/ SMatrix(const Other& o): Base(o) {}
     template <class Other>
     Type& operator=(const Other& o) {Base::operator=(o); return *this;}
     
@@ -288,6 +306,7 @@ namespace linalg {
     int ncols() const {return Base::cols();}
     int colsize() const {return Base::rows();}
     int rowsize() const {return Base::cols();}
+    T det() const {return Base::determinant();}
     Type& setToIdentity() {Base::setIdentity(); return *this;}
     // diag()
   };
