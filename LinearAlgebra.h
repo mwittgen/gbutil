@@ -52,6 +52,16 @@ GOTCHAS:
   need to deal with them differently.
 * Matrix decomposition, solution, etc., is totally different in the two packages.  You'll need to 
   #ifdef your own code for these.
+* This one is IMPORTANT:  Eigen is trying to vectorize with SSE, AVX, etc., which means trying to
+  align its data.  Apparently this is tough to do and requires altering the new operator for its classes
+  **AND EVERY CLASS/STRUCT THAT CONTAINS A VECTORIZABLE OBJECT,** i.e. our SVector/SMatrix classes. See
+  http://eigen.tuxfamily.org/dox/group__TopicUnalignedArrayAssert.html for info.
+  The apparent solution is to include a particular Eigen macro redefining the new() operator in the public
+  section of any enclosing class.  I've aliased this to EIGEN_NEW, which is null if using TMV.
+    Alternatively we can try to shut off the vectorization.  Code below will do this if EIGEN_DONT_VECTORIZE is
+  defined.
+  ...and furthermore, we are advised to give Eigen's allocator to all STL containers containing a vectorizable
+  Eigen object, and even to use their own vector<> class for any vector holding such a thing.
 **/ 
 #ifndef LINEARALGEBRA_H
 #define LINEARALGEBRA_H
@@ -68,6 +78,9 @@ GOTCHAS:
 // for only complex types.
 #define REAL realPart()
 #define IMAG imagPart()
+
+// Give a null definition for the routine managing alignment/vectorization issues for Eigen
+#define EIGEN_NEW
 
 namespace linalg {
   // Dynamic-length vector
@@ -222,6 +235,21 @@ namespace linalg {
 #ifdef USE_MKL
 #define EIGEN_USE_MKL_ALL
 #endif
+
+// Try to get rid of alignment problems by skipping vectorization:
+#ifdef EIGEN_DONT_VECTORIZE
+
+// Need this too according to docs:
+#define EIGEN_DISABLE_UNALIGNED_ARRAY_ASSER
+// and don't the macro that's supposed to solve alignment problems
+#define EIGEN_NEW
+
+#else
+
+// Use the alignment-protecting NEW macro:
+#define EIGEN_NEW EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+#endif
+
 #include "Eigen/Dense"
 #include "Eigen/LU"     // Provides inverse() function
   
@@ -260,6 +288,7 @@ namespace linalg {
   template <typename T, int N>
   class SVector: public Eigen::Matrix<T,N,1> {
   public:
+    EIGEN_NEW
     typedef SVector Type;
     typedef Eigen::Matrix<T,N,1> Base;
     // Pass constructors to base class
@@ -314,6 +343,7 @@ namespace linalg {
   template <typename T, int N1, int N2>
   class SMatrix: public Eigen::Matrix<T,N1,N2> {
   public:
+    EIGEN_NEW
     typedef SMatrix Type;
     typedef Eigen::Matrix<T,N1,N2> Base;
     // Pass constructors to base class
