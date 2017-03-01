@@ -1,9 +1,14 @@
 // Define linear algebra classes using either TMV or Eigen.
-// Each package's classes are mapped to common names by wrapping
-// in common-named classes that map some of their discrepant
-// functions into common behavior.
+// Each package's classes are mapped to common names by deriving
+// new generic wrapper classes from the package-specific ones:
+// linalg::Vector<T> / Matrix<T> is a dynamic-size object of data type T
+// linalg::SVector<T,N> / SMatrix<T,N1,N2> is a fixed-sized object
+
 // At least one of USE_TMV or USE_EIGEN must exist, and TMV takes precendence
-// Define USE_MKL to have Eigen use MKL calls.
+// A compiler error will be generated in this file if neither is defined,
+// so you don't have to keep checking that in other files.
+
+// Define USE_MKL to have Eigen use Intel MKL calls.
 
 /***
 In either case the dynamic/static sized Vector/Matrix become available.
@@ -22,7 +27,31 @@ These classes will be capable of the following common ops:
 * transpose/conjugate/adjointInPlace() or tranpose/conjugat/adjointSelf() methods
 * Initialization to constant values by additional argument of constructor.
 * setZero(), setIdentity()
+* The TMV real/imagPart() views and Eigen's real/imag() version are put into
+  macros v.REAL, v.IMAG, etc.
 * Anything else that happens to have identical syntax in the two packages.
+
+GOTCHAS:
+* Eigen distinguishes row from column vectors, TMV does not.  This means many
+  valid operations in one scheme are ill-defined or wrong in another.  In particular,
+  the v.dot(w) method is preferred, although v.transpose() * w works too.  For complex
+  vectors, these DIFFER though in that Eigen does conjugation for dot, so it's equiv
+  to v.adjoint() * w.
+* Be wary of things like v * m: if v is a column vector, this will fail in Eigen. We
+  can write v.transpose() * m and it'll work in both schemes with the linalg classes.
+  But it yields a row vector in Eigen, which is not convertible to [S]Vector, which is
+  defined as a column vector.
+* Both packages use expression classes frequently for arithmetic operations.  Getting them
+  to convert back to desired class can be tricky because of the extra layer I've added atop.
+* Automatic type conversions are scarce in Eigen and even harder after wrapping.  In particular
+  there are no float - double mixed-type operations or assignments except to individual coefficients.
+  So always cast scalars to the type of the array in arithmetic or in initializations.
+* Remember that both packages have uninitialized data after default constructors.
+* The operator*= is unary class member in Eigen but an external binop in TMV (at least for small vectors).
+  So if you derive further from the linalg classes and override this or other similar ops, you'll
+  need to deal with them differently.
+* Matrix decomposition, solution, etc., is totally different in the two packages.  You'll need to 
+  #ifdef your own code for these.
 **/ 
 #ifndef LINEARALGEBRA_H
 #define LINEARALGEBRA_H
@@ -57,7 +86,7 @@ namespace linalg {
     Type& operator=(const Base& v) {Base::operator=(v); return *this;}
     // Conversions for any type that base class can do:
     template <class Other>
-    explicit Vector(const Other& v): Base(v) {}
+    Vector(const Other& v): Base(v) {}
     template <class Other>
     Type& operator=(const Other& v) {Base::operator=(v); return *this;}
 
@@ -95,7 +124,7 @@ namespace linalg {
     Type& operator=(const Base& v) {Base::operator=(v); return *this;}
     // Conversions for any type that base class can do:
     template <class Other>
-    explicit SVector(const Other& v): Base(v) {}
+    SVector(const Other& v): Base(v) {}
     template <class Other>
     Type& operator=(const Other& v) {Base::operator=(v); return *this;}
 
@@ -136,7 +165,6 @@ namespace linalg {
     // Conversions for any type that base class can do:
     template <class Other>
     Matrix(const Other& m): Base(m) {}
-    //explicit Matrix(const Other& m): Base(m) {}
     template <class Other>
     Type& operator=(const Other& m) {Base::operator=(m); return *this;}
 
@@ -170,7 +198,7 @@ namespace linalg {
 
     // Conversions for any type that base class can do:
     template <class Other>
-    explicit SMatrix(const Other& m): Base(m) {}
+    SMatrix(const Other& m): Base(m) {}
     template <class Other>
     Type& operator=(const Other& m) {Base::operator=(m); return *this;}
 
@@ -216,7 +244,7 @@ namespace linalg {
     Vector(const Base& v): Base(v) {}
     Vector(const Base&& v): Base(v) {}  // Move constructor from TMV vector
     template <class Other>
-    /*explicit*/ Vector(const Other& o): Base(o) {}
+    Vector(const Other& o): Base(o) {}
     template <class Other>
     Type& operator=(const Other& o) {Base::operator=(o); return *this;}
     
@@ -241,7 +269,7 @@ namespace linalg {
     SVector(const Base& v): Base(v) {}
     SVector(const Base&& v): Base(v) {}  // Move constructor from TMV vector
     template <class Other>
-    /*explicit*/ SVector(const Other& o): Base(o) {}
+    SVector(const Other& o): Base(o) {}
     template <class Other>
     Type& operator=(const Other& o) {Base::operator=(o); return *this;}
     
@@ -266,7 +294,7 @@ namespace linalg {
     Matrix(const Base& v): Base(v) {}
     Matrix(const Base&& v): Base(v) {}  // Move constructor from TMV vector
     template <class Other>
-    /*explicit*/ Matrix(const Other& o): Base(o) {}
+    Matrix(const Other& o): Base(o) {}
     template <class Other>
     Type& operator=(const Other& o) {Base::operator=(o); return *this;}
     
@@ -295,7 +323,7 @@ namespace linalg {
     SMatrix(const Base& v): Base(v) {}
     SMatrix(const Base&& v): Base(v) {}  // Move constructor from TMV vector
     template <class Other>
-    /*explicit*/ SMatrix(const Other& o): Base(o) {}
+    SMatrix(const Other& o): Base(o) {}
     template <class Other>
     Type& operator=(const Other& o) {Base::operator=(o); return *this;}
     
