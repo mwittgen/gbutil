@@ -44,7 +44,7 @@ endif
 
 # Rule for compilation:
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $^ -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 # External directories where we'll need to clean/build dependents
 EXTDIRS = 
@@ -60,7 +60,7 @@ test_lookup: test_lookup.o $(OBJ)
 	$(CXX) $(CXXFLAGS) $^  $(LIBS) -o $@
 
 tests/testMarquardt.o: tests/testMarquardt.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -I . -c $^ -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -I . -c $< -o $@
 
 tests/testMarquardt: tests/testMarquardt.o 
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^  $(LIBS) -o $@
