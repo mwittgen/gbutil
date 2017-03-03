@@ -29,6 +29,8 @@ These classes will be capable of the following common ops:
 * setZero(), setIdentity()
 * The TMV real/imagPart() views and Eigen's real/imag() version are put into
   macros v.REAL, v.IMAG, etc.
+* TMV ElemProd(v,w) and Eigen v.cwiseProduct(w) are mapped to each other (with possible
+  loss of efficiency from resolving any expression objects
 * Anything else that happens to have identical syntax in the two packages.
 
 GOTCHAS:
@@ -91,6 +93,7 @@ namespace linalg {
     typedef Vector Type;
     typedef tmv::Vector<T> Base;
     // Pass constructors to base class
+    Vector() =default; // Want default constructor
     Vector(int n): Base(n) {}
     Vector(int n, T val): Base(n,val) {}
     // Conversion from base class
@@ -110,15 +113,16 @@ namespace linalg {
     Vector& transpose() {return *this;}
     const Vector& transpose() const {return *this;}
 
-    // The adjoint is messier since TMV conjugate returns a tmv::VectorView
-    // so an extra copy is incurred by using this.
-    Vector& adjoint() {return this->conjugate();}
-    const Vector& adjoint() const {return this->conjugate();}
+    tmv::VectorView<T> adjoint() {return this->conjugate();}
+    tmv::ConstVectorView<T> adjoint() const {return this->conjugate();}
 
     // "dot" operator is overloaded to op* in TMV
     T dot(const Vector<T>& rhs) const {return this->conjugate() * rhs;}
     // outer product:
     tmv::Matrix<T> outer(const Base& rhs) const {return (*this)^rhs;}
+    // Element-wise product:
+    template <class Other>
+    Type cwiseProduct(const Other& rhs) const {return tmv::ElemProd(*this,rhs);}
   };
 
   // Fixed-length vector
@@ -150,14 +154,17 @@ namespace linalg {
 
     // The adjoint is messier since TMV conjugate returns a tmv::VectorView
     // so an extra copy is incurred by using this.
-    SVector& adjoint() {return this->conjugate();}
-    const SVector& adjoint() const {return this->conjugate();}
+    SVector adjoint() {return this->conjugate();}
+    const SVector adjoint() const {return this->conjugate();}
 
     // "dot" operator is overloaded to op* in TMV
     T dot(const SVector<T,N>& rhs) const {return *this * rhs;}
     // outer product:
     template<int N2>
     tmv::SmallMatrix<T,N,N2> outer(const tmv::SmallVector<T,N>& rhs) const {return (*this)^rhs;}
+    // Element-wise product:
+    template <class Other>
+    Type cwiseProduct(const Other& rhs) const {return tmv::ElemProd(*this,rhs);}
   };
     
   // Dynamic-size matrix
@@ -167,6 +174,7 @@ namespace linalg {
     typedef Matrix Type;
     typedef tmv::Matrix<T> Base;
     // Pass constructors to base class
+    Matrix() =default; // Want default constructor
     Matrix(int n1, int n2): Base(n1,n2) {}
     Matrix(int n1, int n2, T val): Base(n1,n2,val) {}
     // Conversion from base class
@@ -192,6 +200,8 @@ namespace linalg {
     tmv::VectorView<T>& diagonal() {return Base::diag();}
     tmv::ConstVectorView<T>& diagonal() const {return Base::diag();}
     T determinant() const {return Base::det();}
+    // Element-wise product:
+    Type& cwiseProduct(const Type& rhs) const {return tmv::ElemProd(*this,rhs);}
   };
 
   // Fixed-size matrix
@@ -226,6 +236,8 @@ namespace linalg {
     tmv::VectorView<T>& diagonal() {return Base::diag();}
     tmv::ConstVectorView<T>& diagonal() const {return Base::diag();}
     T determinant() const {return Base::det();}
+    // Element-wise product:
+    Type& cwiseProduct(const Type& rhs) const {return tmv::ElemProd(*this,rhs);}
   };
 
 } // namespace linalg  
@@ -266,6 +278,7 @@ namespace linalg {
     typedef Vector Type;
     typedef Eigen::Matrix<T,Eigen::Dynamic,1> Base;
     // Pass constructors to base class
+    Vector() =default;
     Vector(int n): Base(n) {}
     Vector(int n, T val): Base(Base::Constant(n,val)) {}
     // Conversion from base class
@@ -283,6 +296,10 @@ namespace linalg {
     // Define an outer product
     Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> outer(const Base& rhs) {return *this * rhs.transpose();}
   };
+
+  // Element-wise product binary function:
+  template <typename T>
+  Vector<T>& ElemProd(const Vector<T>& v, const Vector<T>& w) {return v.cwiseProduct(w);}
 
   // Fixed-length vector
   template <typename T, int N>
@@ -310,6 +327,10 @@ namespace linalg {
     Eigen::Matrix<T,N,N2> outer(const Eigen::Matrix<T,N2,1>& rhs) {return *this * rhs.transpose();}
   };
   
+  // Element-wise product binary function:
+  template <typename T, int N>
+  SVector<T,N>& ElemProd(const SVector<T,N>& v, const SVector<T,N>& w) {return v.cwiseProduct(w);}
+
   // Dynamic-size matrix
   template <typename T>
   class Matrix: public Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> {
@@ -317,6 +338,7 @@ namespace linalg {
     typedef Matrix Type;
     typedef Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> Base;
     // Pass constructors to base class
+    Matrix() =default; // Want default constructor
     Matrix(int n1, int n2): Base(n1,n2) {}
     Matrix(int n1, int n2, T val): Base(Base::Constant(n1,n2,val)) {}
     // Conversion from base class
@@ -338,6 +360,10 @@ namespace linalg {
     Type& setToIdentity() {Base::setIdentity(); return *this;}
     // diag()
   };
+
+  // Element-wise product binary function:
+  template <typename T>
+  Matrix<T>& ElemProd(const Matrix<T>& v, const Matrix<T>& w) {return v.cwiseProduct(w);}
 
   // Fixed-size matrix
   template <typename T, int N1, int N2>
@@ -368,6 +394,12 @@ namespace linalg {
     Type& setToIdentity() {Base::setIdentity(); return *this;}
     // diag()
   };
+
+  // Element-wise product binary function:
+  template <typename T, int N1, int N2>
+  SMatrix<T,N1,N2>& ElemProd(const SMatrix<T,N1,N2>& v,
+			     const SMatrix<T,N1,N2>& w) {return v.cwiseProduct(w);}
+
 } // end namespace linalg
 
 #else
