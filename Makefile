@@ -32,7 +32,7 @@ LIBS += $(shell cat $(TMV_DIR)/share/tmv/tmv-link) -ltmv_symband
 endif
 
 ifdef EIGEN_DIR
-INCLUDES += -I $(EIGEN_DIR)/include -D USE_EIGEN
+INCLUDES += -I $(EIGEN_DIR) -D USE_EIGEN
 endif
 
 # Check that either TMV or EIGEN are available (ok to have both)

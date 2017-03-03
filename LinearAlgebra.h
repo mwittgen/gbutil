@@ -31,6 +31,7 @@ These classes will be capable of the following common ops:
   macros v.REAL, v.IMAG, etc.
 * TMV ElemProd(v,w) and Eigen v.cwiseProduct(w) are mapped to each other (with possible
   loss of efficiency from resolving any expression objects
+* TMV v.sumElements(v) and Eigen v.sum() mapped into each other for vectors.
 * Anything else that happens to have identical syntax in the two packages.
 
 GOTCHAS:
@@ -123,6 +124,8 @@ namespace linalg {
     // Element-wise product:
     template <class Other>
     Type cwiseProduct(const Other& rhs) const {return tmv::ElemProd(*this,rhs);}
+    // Sum reduction:
+    T sum() const {return Base::sumElements();}
   };
 
   // Fixed-length vector
@@ -165,6 +168,8 @@ namespace linalg {
     // Element-wise product:
     template <class Other>
     Type cwiseProduct(const Other& rhs) const {return tmv::ElemProd(*this,rhs);}
+    // Sum reduction:
+    T sum() const {return Base::sumElements();}
   };
     
   // Dynamic-size matrix
@@ -295,6 +300,8 @@ namespace linalg {
 
     // Define an outer product
     Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> outer(const Base& rhs) {return *this * rhs.transpose();}
+    // Sum reduction:
+    T sumElements() const {return Base::sum();}
   };
 
   // Element-wise product binary function:
@@ -325,6 +332,8 @@ namespace linalg {
     // Define an outer product
     template <int N2>
     Eigen::Matrix<T,N,N2> outer(const Eigen::Matrix<T,N2,1>& rhs) {return *this * rhs.transpose();}
+    // Sum reduction:
+    T sumElements() const {return Base::sum();}
   };
   
   // Element-wise product binary function:
@@ -358,7 +367,6 @@ namespace linalg {
     int rowsize() const {return Base::cols();}
     T det() const {return Base::determinant();}
     Type& setToIdentity() {Base::setIdentity(); return *this;}
-    // diag()
   };
 
   // Element-wise product binary function:

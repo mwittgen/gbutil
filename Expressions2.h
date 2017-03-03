@@ -677,22 +677,9 @@ public:									       \
   }									       \
 }
 
-  /**using std::bit_and; 
-  using std::bit_or; /**/
-  /* These things are in C++-11 but not earlier */
-  template <class T>
-  class bit_and {
-  public:
-    T operator()(const T& x, const T& y) const {return x&y;}
-    typedef T result_type;
-  };
-  template <class T>
-  class bit_or {
-  public:
-    T operator()(const T& x, const T& y) const {return x|y;}
-    typedef T result_type;
-  };
-    
+  using std::bit_and; 
+  using std::bit_or;
+
   // Define binary operators which only work with integer arguments
   BINARY_INTEGER(ModulusToken, std::modulus, "%");
   BINARY_INTEGER(BitAndToken, bit_and, "&");
