@@ -202,8 +202,8 @@ namespace linalg {
     Type& adjointInPlace() {Base::conjugateSelf(); return Base::transposeSelf();}
     int rows() const {return Base::nrows();}
     int cols() const {return Base::ncols();}
-    tmv::VectorView<T>& diagonal() {return Base::diag();}
-    tmv::ConstVectorView<T>& diagonal() const {return Base::diag();}
+    tmv::VectorView<T> diagonal() {return Base::diag();}
+    tmv::ConstVectorView<T> diagonal() const {return Base::diag();}
     T determinant() const {return Base::det();}
     // Element-wise product:
     Type& cwiseProduct(const Type& rhs) const {return tmv::ElemProd(*this,rhs);}
@@ -238,8 +238,8 @@ namespace linalg {
     Type& adjointInPlace() {Base::conjugateSelf(); return Base::transposeSelf();}
     int rows() const {return Base::nrows();}
     int cols() const {return Base::ncols();}
-    tmv::VectorView<T>& diagonal() {return Base::diag();}
-    tmv::ConstVectorView<T>& diagonal() const {return Base::diag();}
+    tmv::VectorView<T> diagonal() {return Base::diag();}
+    tmv::ConstVectorView<T> diagonal() const {return Base::diag();}
     T determinant() const {return Base::det();}
     // Element-wise product:
     Type& cwiseProduct(const Type& rhs) const {return tmv::ElemProd(*this,rhs);}
