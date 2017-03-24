@@ -86,7 +86,4 @@ private:
   ostringstream oss;
 };
 
-// For limited backward compatibility with old Std.h class:
-typedef std::runtime_error MyException;
-
 #endif

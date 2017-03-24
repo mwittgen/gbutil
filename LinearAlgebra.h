@@ -200,8 +200,8 @@ namespace linalg {
     Type& transposeInPlace() {return Base::transposeSelf();}
     Type& conjugateInPlace() {return Base::conjugateSelf();}
     Type& adjointInPlace() {Base::conjugateSelf(); return Base::transposeSelf();}
-    int rows() const {return Base::nrows();}
-    int cols() const {return Base::ncols();}
+    int rows() const {return Base::colsize();}
+    int cols() const {return Base::rowsize();}
     tmv::VectorView<T> diagonal() {return Base::diag();}
     tmv::ConstVectorView<T> diagonal() const {return Base::diag();}
     T determinant() const {return Base::det();}
@@ -236,8 +236,8 @@ namespace linalg {
     Type& transposeInPlace() {return Base::transposeSelf();}
     Type& conjugateInPlace() {return Base::conjugateSelf();}
     Type& adjointInPlace() {Base::conjugateSelf(); return Base::transposeSelf();}
-    int rows() const {return Base::nrows();}
-    int cols() const {return Base::ncols();}
+    int rows() const {return Base::colsize();}
+    int cols() const {return Base::rowsize();}
     tmv::VectorView<T> diagonal() {return Base::diag();}
     tmv::ConstVectorView<T> diagonal() const {return Base::diag();}
     T determinant() const {return Base::det();}
