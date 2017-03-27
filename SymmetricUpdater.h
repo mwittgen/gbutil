@@ -90,6 +90,9 @@ namespace linalg {
 	alpha.subMatrix(start1, start1+v1.size(),
 			start2, start2+v2.size()) += scalar * v1 * v2.transpose();
 #endif
+#ifdef _OPENMP
+      omp_unset_lock(&locks[block]);
+#endif
     }
     // Second version does += scalar * v * v^T, which crosses diagonal
     template<class V>
@@ -113,6 +116,9 @@ namespace linalg {
       alpha.subMatrix(start, start+v.size(),start, start+v.size()).
 	template selfadjointView<Eigen::Lower>().
 	rankUpdate(v,scalar);
+#endif
+#ifdef _OPENMP
+      omp_unset_lock(&locks[block]);
 #endif
     }
   private:
