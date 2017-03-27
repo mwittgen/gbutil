@@ -19,7 +19,7 @@
 #include "LinearAlgebra.h"
 #include <vector>
 
-namespace astrometry {
+namespace linalg {
   class SymmetricUpdater {
   public:
   SymmetricUpdater(linalg::Matrix<double>& alpha_,
@@ -104,12 +104,16 @@ namespace astrometry {
 #endif
       // Use each package's special routine
 #ifdef USE_TMV
-      tmv::SymMatrix<double> tmp = v1 ^ v1;
+      tmv::SymMatrix<double> tmp = v ^ v;
       if (scalar!=1.) tmp *= scalar;
-      alpha.subSymMatrix(start, start+v.size()) += tmp;
+      tmv::SymMatrixViewOf(alpha.subMatrix(start, start+v.size(),
+					   start, start+v.size()),
+			   tmv::Lower) += tmp;
 #elif defined USE_EIGEN
-      alpha.subMatrix(start, start+v.size(),
-	   start, start+v.size()).selfAdjointView<Eigen::Lower>().rankUpdate(v,scalar);
+      alpha.subMatrix(start, start+v.size(),start, start+v.size()).
+	template selfadjointView<Eigen::Lower>().
+	rankUpdate(v,scalar);
+#endif
     }
   private:
     linalg::Matrix<double>& alpha;
@@ -121,6 +125,6 @@ namespace astrometry {
     std::vector<omp_lock_t> locks;
 #endif
   };
-} // end namespace astrometry
+} // end namespace linalg
 
 #endif  // SYMMETRICUPDATER_H

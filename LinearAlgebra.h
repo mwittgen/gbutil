@@ -206,7 +206,7 @@ namespace linalg {
     tmv::ConstVectorView<T> diagonal() const {return Base::diag();}
     T determinant() const {return Base::det();}
     // Element-wise product:
-    Type& cwiseProduct(const Type& rhs) const {return tmv::ElemProd(*this,rhs);}
+    Type cwiseProduct(const Type& rhs) const {return tmv::ElemProd(*this,rhs);}
   };
 
   // Fixed-size matrix
@@ -242,7 +242,7 @@ namespace linalg {
     tmv::ConstVectorView<T> diagonal() const {return Base::diag();}
     T determinant() const {return Base::det();}
     // Element-wise product:
-    Type& cwiseProduct(const Type& rhs) const {return tmv::ElemProd(*this,rhs);}
+    Type cwiseProduct(const Type& rhs) const {return tmv::ElemProd(*this,rhs);}
   };
 
 } // namespace linalg  
@@ -306,7 +306,7 @@ namespace linalg {
 
   // Element-wise product binary function:
   template <typename T>
-  Vector<T>& ElemProd(const Vector<T>& v, const Vector<T>& w) {return v.cwiseProduct(w);}
+  Vector<T> ElemProd(const Vector<T>& v, const Vector<T>& w) {return v.cwiseProduct(w);}
 
   // Fixed-length vector
   template <typename T, int N>
@@ -338,7 +338,7 @@ namespace linalg {
   
   // Element-wise product binary function:
   template <typename T, int N>
-  SVector<T,N>& ElemProd(const SVector<T,N>& v, const SVector<T,N>& w) {return v.cwiseProduct(w);}
+  SVector<T,N> ElemProd(const SVector<T,N>& v, const SVector<T,N>& w) {return v.cwiseProduct(w);}
 
   // Dynamic-size matrix
   template <typename T>
@@ -371,7 +371,7 @@ namespace linalg {
 
   // Element-wise product binary function:
   template <typename T>
-  Matrix<T>& ElemProd(const Matrix<T>& v, const Matrix<T>& w) {return v.cwiseProduct(w);}
+  Matrix<T> ElemProd(const Matrix<T>& v, const Matrix<T>& w) {return v.cwiseProduct(w);}
 
   // Fixed-size matrix
   template <typename T, int N1, int N2>
@@ -405,8 +405,8 @@ namespace linalg {
 
   // Element-wise product binary function:
   template <typename T, int N1, int N2>
-  SMatrix<T,N1,N2>& ElemProd(const SMatrix<T,N1,N2>& v,
-			     const SMatrix<T,N1,N2>& w) {return v.cwiseProduct(w);}
+  SMatrix<T,N1,N2> ElemProd(const SMatrix<T,N1,N2>& v,
+			    const SMatrix<T,N1,N2>& w) {return v.cwiseProduct(w);}
 
 } // end namespace linalg
 
