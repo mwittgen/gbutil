@@ -63,7 +63,7 @@ namespace linalg {
 	throw std::runtime_error("SymmetricUpdater got 2 equal segments");
       if (seg2 < seg1) {
 	rankOneUpdate(seg2,start2,v2,
-		      seg1,start1,v1);  // Swap so seg1<seg2.
+		      seg1,start1,v1, scalar);  // Swap so seg1<seg2.
 	return;
       }
 #ifdef _OPENMP
