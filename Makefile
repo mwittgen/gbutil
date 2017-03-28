@@ -11,19 +11,25 @@ INCLUDES :=
 
 LIBS := -lm
 
+# Here are (most of) the object libraries we can compile for external use:
+OBJ := BinomFact.o StringStuff.o Poisson.o Table.o Pset.o odeint.o \
+	Interpolant.o Expressions.o Shear.o 
+
 # Collect the includes and libraries we need
 ifdef FFTW_DIR
 INCLUDES += -I $(FFTW_DIR)/include
 LIBS += -L $(FFTW_DIR)/lib -lfftw3
+OBJ += fft.o 
 else
-$(error Require FFTW_DIR in environment)
+$(info WARNING: No FFTW_DIR in environment, skipping fft.cpp compilation)
 endif
 
 ifdef YAML_DIR
 INCLUDES += -I $(YAML_DIR)/include
 LIBS += -L $(YAML_DIR)/lib -lyaml-cpp
+OBJ += Poly2d.o Lookup1d.o
 else
-$(error Require YAML_DIR in environment)
+$(info WARNING: No YAML_DIR in environment, skipping Poly2d.cpp, Lookup1d.cpp compilation)
 endif
 
 ifdef TMV_DIR
@@ -48,9 +54,6 @@ endif
 
 # External directories where we'll need to clean/build dependents
 EXTDIRS = 
-
-OBJ = BinomFact.o fft.o StringStuff.o Poisson.o Table.o Pset.o odeint.o Poly2d.o \
-	Interpolant.o Expressions.o Shear.o Lookup1d.o
 
 SRC = $(OBJ:%.o=%.cpp)
 
