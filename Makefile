@@ -7,19 +7,26 @@
 # YAML_DIR
 # MKL_DIR (optionally)
 
-INCLUDES := 
+OBJDIR = obj
+SRCDIR = src
+INCLUDEDIR = include
+TESTDIR = tests
+TESTBINDIR = testbin
+
+INCLUDES := -I $(INCLUDEDIR)
 
 LIBS := -lm
 
 # Here are (most of) the object libraries we can compile for external use:
-OBJ := BinomFact.o StringStuff.o Poisson.o Table.o Pset.o odeint.o \
-	Interpolant.o Expressions.o Shear.o 
+OBJS := $(OBJDIR)/BinomFact.o $(OBJDIR)/StringStuff.o $(OBJDIR)/Poisson.o \
+        $(OBJDIR)/Table.o $(OBJDIR)/Pset.o $(OBJDIR)/odeint.o \
+        $(OBJDIR)/Interpolant.o $(OBJDIR)/Expressions.o $(OBJDIR)/Shear.o 
 
 # Collect the includes and libraries we need
 ifdef FFTW_DIR
 INCLUDES += -I $(FFTW_DIR)/include
 LIBS += -L $(FFTW_DIR)/lib -lfftw3
-OBJ += fft.o 
+OBJS += $(OBJDIR)/fft.o 
 else
 $(info WARNING: No FFTW_DIR in environment, skipping fft.cpp compilation)
 endif
@@ -27,7 +34,7 @@ endif
 ifdef YAML_DIR
 INCLUDES += -I $(YAML_DIR)/include
 LIBS += -L $(YAML_DIR)/lib -lyaml-cpp
-OBJ += Poly2d.o Lookup1d.o
+OBJS += $(OBJDIR)/Poly2d.o $(OBJDIR)/Lookup1d.o
 else
 $(info WARNING: No YAML_DIR in environment, skipping Poly2d.cpp, Lookup1d.cpp compilation)
 endif
@@ -48,30 +55,32 @@ ifdef MKL_DIR
 INCLUDES += -I $(MKL_DIR)/include -D USE_MKL
 endif
 
-# Rule for compilation:
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
-
 # External directories where we'll need to clean/build dependents
 EXTDIRS = 
 
-SRC = $(OBJ:%.o=%.cpp)
+all: $(OBJS)
 
-all: $(OBJ)
+python:
+	python setup.py install
 
-test_lookup: test_lookup.o $(OBJ) 
-	$(CXX) $(CXXFLAGS) $^  $(LIBS) -o $@
+# Rule for compilation:
+$(OBJS):  $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
-tests/testMarquardt.o: tests/testMarquardt.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -I . -c $< -o $@
+######### Test programs
 
-tests/testMarquardt: tests/testMarquardt.o 
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $^  $(LIBS) -o $@
+TESTSRC := $(wildcard $(TESTDIR)/*.cpp)
+TESTINCLUDE := -I $(TESTDIR)
+TESTOBJS := $(TESTSRC:$(TESTDIR)/%.cpp=$(OBJDIR)/%.o)
+TESTTARGETS := $(TESTSRC:$(TESTDIR)/%.cpp=$(TESTBINDIR)/%)
+TESTSPY := $(wildcard $(TESTDIR)/*.py)
 
-testLinalg: testLinalg.o 
-	$(CXX) $(CXXFLAGS) $^  $(LIBS) -o $@
+tests: $(TESTTARGETS)
 
-testLinalg2: testLinalg2.o 
+$(TESTOBJS):  $(OBJDIR)/%.o : $(TESTDIR)/%.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(TESTINCLUDE) -c $^ -o $@
+
+$(TESTTARGETS): $(TESTBINDIR)/% : $(OBJDIR)/%.o $(OBJS)
 	$(CXX) $(CXXFLAGS) $^  $(LIBS) -o $@
 
 ###############################################################
@@ -82,13 +91,16 @@ exts:
 	for dir in $(EXTDIRS); do (cd $$dir && $(MAKE)); done
 
 local-depend:
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -MM $(SRC) > .depend
+	rm .depend
+	for src in $(OBJS:$(OBJDIR)/%.o=%) ; \
+	   do $(CXX) $(CXXFLAGS) $(INCLUDES) -MM $(SRCDIR)/$$src.cpp -MT $(OBJDIR)/$$src.o >> .depend; \
+	done
 
 depend: local-depend
 	for dir in $(EXTDIRS); do (cd $$dir && $(MAKE) depend); done
 
 local-clean:
-	rm -f *.o *~ core .depend tests/*.o
+	rm -f $(OBJDIR)/* $(TESTBINDIR)/* *~ core .depend
 
 clean: local-clean
 	for dir in $(EXTDIRS); do (cd $$dir && $(MAKE) clean); done
