@@ -27,7 +27,7 @@ The Makefile requires these environment variables to be set:
   * `EIGEN_DIR`: path to root of Eigen installation. This is header-only library; there should be a `${EIGEN_DIR}/Eigen` subdirectory where the headers are found.  If both `TMV_DIR` and `EIGEN_DIR` are given, TMV will be used.
 * `MKL_DIR`: Path to the MKL.  This is optional, and should be given if you want to use Eigen with MKL.  TMV usage of MKL will have been determined when you built it.
 
-Once these are all set you should be able to just run `make cpp` to build the C++ programs. The few undocumented test routines are built by `make tests`.
+Once these are all set you should be able to just run `make` to build the C++ programs. The few undocumented test routines are built by `make tests`.
 
 ### Python
 Either `python setup.py install` or just `make python` will install the Python package `gbutil` (which include that subpackage `decam`).
