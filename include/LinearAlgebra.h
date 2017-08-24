@@ -241,6 +241,11 @@ namespace linalg {
     tmv::VectorView<T> diagonal() {return Base::diag();}
     tmv::ConstVectorView<T> diagonal() const {return Base::diag();}
     T determinant() const {return Base::det();}
+    Type inverse() const {
+      // Normalization matrix to 0,0 element to avoid overflow
+      T scale = 1./(*this)(0,0);
+      return ((*this)*scale).inverse() * scale;
+    }
     // Element-wise product:
     Type cwiseProduct(const Type& rhs) const {return tmv::ElemProd(*this,rhs);}
   };
