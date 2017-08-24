@@ -241,11 +241,6 @@ namespace linalg {
     tmv::VectorView<T> diagonal() {return Base::diag();}
     tmv::ConstVectorView<T> diagonal() const {return Base::diag();}
     T determinant() const {return Base::det();}
-    Type inverse() const {
-      // Normalization matrix to 0,0 element to avoid overflow
-      T scale = 1./(*this)(0,0);
-      return ((*this)*scale).inverse() * scale;
-    }
     // Element-wise product:
     Type cwiseProduct(const Type& rhs) const {return tmv::ElemProd(*this,rhs);}
   };
@@ -339,6 +334,13 @@ namespace linalg {
     Eigen::Matrix<T,N,N2> outer(const Eigen::Matrix<T,N2,1>& rhs) {return *this * rhs.transpose();}
     // Sum reduction:
     T sumElements() const {return Base::sum();}
+
+    Type inverse() const {
+      // ***Normalization matrix to 0,0 element to avoid overflow
+      T scale = 1./(*this)(0,0);
+      Base b(*this * scale);
+      return b.inverse() * scale;
+    }
   };
   
   // Element-wise product binary function:
