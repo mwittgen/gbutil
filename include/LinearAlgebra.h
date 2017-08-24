@@ -70,7 +70,7 @@ GOTCHAS:
 #define LINEARALGEBRA_H
 
 #include <complex>
-
+#include <iostream>
 
 #ifdef USE_TMV
 
@@ -334,13 +334,6 @@ namespace linalg {
     Eigen::Matrix<T,N,N2> outer(const Eigen::Matrix<T,N2,1>& rhs) {return *this * rhs.transpose();}
     // Sum reduction:
     T sumElements() const {return Base::sum();}
-
-    Type inverse() const {
-      // ***Normalization matrix to 0,0 element to avoid overflow
-      T scale = 1./(*this)(0,0);
-      Base b(*this * scale);
-      return b.inverse() * scale;
-    }
   };
   
   // Element-wise product binary function:
@@ -408,6 +401,13 @@ namespace linalg {
     T det() const {return Base::determinant();}
     Type& setToIdentity() {Base::setIdentity(); return *this;}
     // diag()
+    Type inverse() const {
+      // ***Normalization matrix to 0,0 element to avoid overflow
+      T scale = 1./(*this)(0,0);
+      std::cerr << "!! scale " << scale << std::endl;
+      Base b = *this * scale;
+      return b.inverse() * scale;
+    }
   };
 
   // Element-wise product binary function:
