@@ -402,9 +402,9 @@ namespace linalg {
     Type& setToIdentity() {Base::setIdentity(); return *this;}
     // diag()
     Type inverse() const {
-      // ***Normalization matrix to 0,0 element to avoid overflow
+      // ***Normalize matrix to 0,0 element to avoid overflow
       T scale = 1./(*this)(0,0);
-      std::cerr << "!! scale " << scale << std::endl;
+      //**std::cerr << "!! scale " << scale << std::endl;
       Base b = *this * scale;
       return b.inverse() * scale;
     }

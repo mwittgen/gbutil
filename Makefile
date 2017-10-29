@@ -91,7 +91,7 @@ exts:
 	for dir in $(EXTDIRS); do (cd $$dir && $(MAKE)); done
 
 local-depend:
-	rm .depend
+	rm -f .depend
 	for src in $(OBJS:$(OBJDIR)/%.o=%) ; \
 	   do $(CXX) $(CXXFLAGS) $(INCLUDES) -MM $(SRCDIR)/$$src.cpp -MT $(OBJDIR)/$$src.o >> .depend; \
 	done
