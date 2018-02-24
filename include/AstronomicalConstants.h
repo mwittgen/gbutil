@@ -48,10 +48,10 @@ const double MercuryGM = 6.55371264e-06;
 const double VenusGM =   9.66331433e-05;
 const double EarthMoonGM=1.20026937e-04;
 const double MarsGM =    1.27397978e-05;
-const double JupiterGM = 3.76844407e-02;
-const double SaturnGM =  1.12830982e-02;
-const double UranusGM =  1.72348553e-03;
-const double NeptuneGM = 2.03318556e-03;
+const double JupiterGM = 3.76844407e-02 + 7.80e-6; // Include satellites
+const double SaturnGM =  1.12830982e-02 + 2.79e-6;
+const double UranusGM =  1.72348553e-03 + 0.18e-6;
+const double NeptuneGM = 2.03318556e-03 + 0.43e-6;
 const double SolarSystemGM= GM + MercuryGM + VenusGM + EarthMoonGM +
   MarsGM + JupiterGM + SaturnGM + UranusGM + NeptuneGM; // Not quite everything here but ok.
 
