@@ -4,7 +4,9 @@
 #include "LinearAlgebra.h"
 #include "Std.h"
 
+#ifdef USE_YAML
 #include "yaml-cpp/yaml.h"
+#endif
 
 namespace poly2d {
 
@@ -50,11 +52,13 @@ namespace poly2d {
     void write(std::ostream& os, int precision=DEFAULT_PRECISION) const;  
     static Poly2d* create(std::istream& is);  // Build polynomial from serialized string
 
+#ifdef USE_YAML
     // Serialize to/from YAML
     void write(YAML::Emitter& os) const;
     static Poly2d* create(const YAML::Node& node,
 			  bool& defaulted);
-
+#endif
+    
     // If you want to know the orders for given coeffient index or vice-versa:
     // Negative indices/powers returned if inputs are negative.  No checks on upper bounds.
     int vectorIndex(int i, int j) const;  // vector index of coefficient of x^i y^j

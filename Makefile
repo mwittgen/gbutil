@@ -20,7 +20,8 @@ LIBS := -lm
 # Here are (most of) the object libraries we can compile for external use:
 OBJS := $(OBJDIR)/BinomFact.o $(OBJDIR)/StringStuff.o $(OBJDIR)/Poisson.o \
         $(OBJDIR)/Table.o $(OBJDIR)/Pset.o $(OBJDIR)/odeint.o \
-        $(OBJDIR)/Interpolant.o $(OBJDIR)/Expressions.o $(OBJDIR)/Shear.o 
+        $(OBJDIR)/Interpolant.o $(OBJDIR)/Expressions.o $(OBJDIR)/Shear.o \
+	$(OBJDIR)/Poly2d.o $(OBJDIR)/Lookup1d.o
 
 # Collect the includes and libraries we need
 ifdef FFTW_DIR
@@ -28,15 +29,14 @@ INCLUDES += -I $(FFTW_DIR)/include
 LIBS += -L $(FFTW_DIR)/lib -lfftw3
 OBJS += $(OBJDIR)/fft.o 
 else
-$(info WARNING: No FFTW_DIR in environment, skipping fft.cpp compilation)
+$(warning: WARNING: No FFTW_DIR in environment, skipping fft.cpp compilation)
 endif
 
 ifdef YAML_DIR
-INCLUDES += -I $(YAML_DIR)/include
+INCLUDES += -I $(YAML_DIR)/include -D USE_YAML
 LIBS += -L $(YAML_DIR)/lib -lyaml-cpp
-OBJS += $(OBJDIR)/Poly2d.o $(OBJDIR)/Lookup1d.o
 else
-$(info WARNING: No YAML_DIR in environment, skipping Poly2d.cpp, Lookup1d.cpp compilation)
+$(warning WARNING: No YAML_DIR in environment, skipping Lookup1d, some Poly2d functionality)
 endif
 
 ifdef TMV_DIR

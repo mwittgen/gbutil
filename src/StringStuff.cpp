@@ -76,18 +76,26 @@ namespace stringstuff {
     size_t subStart=0;
     size_t subEnd=0;
     while (subEnd < s.size()) {
-      if (s[subEnd]==c) {
-	out.push_back(s.substr(subStart, subEnd-subStart));
+      if (s[subEnd]==c || (c==0 && std::isspace(s[subEnd]))) {
+	// Do not save a word on consecutive whitespace
+	if (c!=0 || subEnd>subStart) 
+	  out.push_back(s.substr(subStart, subEnd-subStart));
 	subEnd++;
 	subStart = subEnd;
       } else {
 	subEnd++;
       }
     }
-    if (subStart < s.size()) 
+    if (c==0 && subStart==s.size()) {
+      // don't add trailing whitespace
+      return out;
+    } else if (subStart < s.size()) {
       out.push_back(s.substr(subStart));
-    else
+    } else {
+      // Return empty string after non-white
+      // trailing separator
       out.push_back("");
+    }
     return out;
   }
 

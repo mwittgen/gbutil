@@ -94,6 +94,7 @@ Poly2d::create(std::istream& is) {
   return poly;
 }
 
+#ifdef USE_YAML
 void
 Poly2d::write(YAML::Emitter& os) const {
   os << YAML::BeginMap;
@@ -159,6 +160,7 @@ Poly2d::create(const YAML::Node& node,
   return poly;
 }
 
+#endif //YAML serializations
 /////////////////////////////////////////////////////////////////////
 // Computations:
 /////////////////////////////////////////////////////////////////////

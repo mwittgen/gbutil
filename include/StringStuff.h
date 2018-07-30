@@ -36,8 +36,11 @@ namespace stringstuff {
   // Remove everything after & including the last "." period
   void stripExtension(string& s);
 
-  // Split string at designated character
-  std::list<string> split(const string& s, char c);
+  // Split string at designated character;
+  // Default is to split at whitespace.
+  // Trailing whitespace is dropped but trailing
+  // non-white will add null string at end.
+  std::list<string> split(const string& s, char c=0);
 
   // Make a string that holds the current time and the command line
   string taggedCommandLine(int argc, char *argv[]);

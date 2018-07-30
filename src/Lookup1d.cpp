@@ -16,6 +16,7 @@ Lookup1d::cachedFilenames;
 /////////////////////////////////////////
 // (De-)serialization routines
 /////////////////////////////////////////
+#ifdef USE_YAML
 
 void
 Lookup1d::write(YAML::Emitter& os) const {
@@ -72,9 +73,11 @@ Lookup1d::Lookup1d(const YAML::Node& node) {
     dvda[i] = (v[i+1]-v[i])/argStep;
 
 }
+#endif 
 
 void
 Lookup1d::ingestFile(const string& filename, const string& cachename) {
+#ifdef USE_YAML
   // Create new cache if needed
   if (caches.count(cachename)==0) {
     caches[cachename] = Cache();
@@ -108,10 +111,16 @@ Lookup1d::ingestFile(const string& filename, const string& cachename) {
     // Add this filename to set of ingested ones
     cachedFilenames[cachename].insert(filename);
   }
+#else
+  // No YAML: this can't be done
+  cerr << "ERROR: Lookup1d cannot be built and used without YAML libraries" << endl;
+  exit(1);
+#endif
 }
 
 const Lookup1d*
 Lookup1d::find(const string& tablename, const string& cachename) {
+#ifdef USE_YAML
   if (caches.count(cachename)==0)
     throw LookupError("No such Lookup1d cache name " + cachename);
   auto i = caches[cachename].find(tablename);
@@ -119,6 +128,11 @@ Lookup1d::find(const string& tablename, const string& cachename) {
     throw LookupError("No Lookup1d with name " + tablename +
 		      " in cache " + cachename);
   return i->second;
+#else
+  // No YAML: this can't be done
+  cerr << "ERROR: Lookup1d cannot be built and used without YAML libraries" << endl;
+  exit(1);
+#endif
 }
 
 /////////////////////////////////////////

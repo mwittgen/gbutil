@@ -26,8 +26,12 @@
 #include <set>
 #include <map>
 #include <iostream>
+#include <vector>
 #include "Std.h"
+
+#ifdef USE_YAML  // We won't be able to construct any instance of this without YAML
 #include "yaml-cpp/yaml.h"
+#endif
 
 namespace lookup {
   class LookupError: public std::runtime_error {
@@ -58,10 +62,12 @@ namespace lookup {
     // Find location where arg + scale*f(arg) = val:
     double inverse(double val, double scale) const;
 
+#ifdef USE_YAML
     // Serialization routine, really for documentation purposes
     // as we have not given ways to make tables here:
     void write(YAML::Emitter& os) const;
-
+#endif
+    
     // Cache management routines:  first, get all tables from some file.
     // Seperate named caches can be kept.
     static void ingestFile(const string& filename, const string& cachename="default");
@@ -76,7 +82,9 @@ namespace lookup {
     typedef std::map<string, const Lookup1d*> Cache;
 
   private:
+#ifdef USE_YAML
     Lookup1d(const YAML::Node& node);
+#endif
     // Hide copy constructor & assignment
     Lookup1d(const Lookup1d& rhs);
     void operator=(const Lookup1d& rhs);
@@ -99,6 +107,6 @@ namespace lookup {
 
 } // end namespace lookup
 
-#endif
+#endif  // End include gaurd
 
 
