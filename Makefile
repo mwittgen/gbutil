@@ -39,13 +39,14 @@ else
 $(warning WARNING: No YAML_DIR in environment, skipping Lookup1d, some Poly2d functionality)
 endif
 
+# Use either TMV or EIGEN, not both (prefer TMV)
 ifdef TMV_DIR
 INCLUDES += -I $(TMV_DIR)/include -D USE_TMV
 LIBS += $(shell cat $(TMV_DIR)/share/tmv/tmv-link) -ltmv_symband 
-endif
-
+else 
 ifdef EIGEN_DIR
 INCLUDES += -I $(EIGEN_DIR) -D USE_EIGEN
+endif
 endif
 
 # Check that either TMV or EIGEN are available (ok to have both)
@@ -100,7 +101,7 @@ depend: local-depend
 	for dir in $(EXTDIRS); do (cd $$dir && $(MAKE) depend); done
 
 local-clean:
-	rm -f $(OBJDIR)/* $(TESTBINDIR)/* *~ core .depend
+	rm -rf $(OBJDIR)/* $(TESTBINDIR)/* *~ core .depend
 
 clean: local-clean
 	for dir in $(EXTDIRS); do (cd $$dir && $(MAKE) clean); done
@@ -111,4 +112,4 @@ endif
 
 export
 
-.PHONY: all install dist depend clean 
+.PHONY: all install dist depend clean local-clean local-depend exts python tests
