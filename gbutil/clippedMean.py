@@ -1,3 +1,4 @@
+from __future__ import division,print_function
 import numpy as np
 import numpy.ma as ma
 
@@ -28,7 +29,7 @@ def clippedMean(a, nSigma, axis=None, sigma=None, sigmaFloor=None, maxSample=Non
         sample = a
     else:
         # Subsample the data in deriving clipping limits
-        step = (dataLength-1)/maxSample + 1
+        step = (dataLength-1)//maxSample + 1
         if axis==None:
             sample = a.flatten[::step]
         else:

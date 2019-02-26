@@ -1,6 +1,6 @@
 """ Routines here that give or manipulate images with formats specific to DECam.
 """
-
+from __future__ import division,print_function
 import numpy as np
 import astropy.io.fits as pf
 import re
@@ -279,8 +279,8 @@ def minimalHeader(detpos):
     h['CTYPE2'] = 'DEC--TAN'
     x,y = ccdCorners[detpos]
     h['DETSEC']='[{:d}:{:d},{:d}:{:d}]'.format(x, x+2047, y, y+4095)
-    h['CRPIX2']=14826.- ((y-1)/2048)*2129.6667
-    h['CRPIX1']=13423.2- ((x-1)/2048)*2254.4
+    h['CRPIX2']=14826.- ((y-1)//2048)*2129.6667
+    h['CRPIX1']=13423.2- ((x-1)//2048)*2254.4
     
     return h
     
@@ -400,7 +400,7 @@ class XtalkRemover:
         shape = hdu.data.shape
         if len(shape) != 2:
             raise Exception('XtalkRemover() got hdu that is not 2d image')
-        xCenter = shape[1]/2
+        xCenter = shape[1]//2
         if detpos[0]=='N':
             # North CCDs have A at lower x
             ltor = self.atob[ccdnum]

@@ -41,7 +41,7 @@ def dcr(parallactic, airmass, band, referenceColor=0.61):
     The referenceColor is the g-i for which DCR is defined as zero.
     '''
     dcrConstant = {'g':45.0, 'r':8.4}  # DCR amplitude in mas/mag/tan(z)
-    if band in dcrConstant.keys():
+    if band in dcrConstant:
         # Convert DCR amplitude from mas to degrees
         ampl = dcrConstant[band] / (3600.*1000.)
         dcry = ampl * np.cos(parallactic)*np.sqrt(airmass*airmass-1)

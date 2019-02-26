@@ -1,5 +1,6 @@
 """ Generically useful routines
 """
+from __future__ import division,print_function
 import astropy.io.fits as pf
 import numpy as np
 import sys
@@ -41,8 +42,8 @@ def mergeLDACs(infiles, outfile, keywordForExtname=None):
                 h = readLDACHeader(infits, hdunum)
                 hdunum += 1
                 if hdunum >= len(f) or f[hdunum].header['EXTNAME']!='LDAC_OBJECTS':
-                    print 'Missing/wrong LDAC_OBJECTS in ',infits,\
-                          ' at extension ',hdunum
+                    print('Missing/wrong LDAC_OBJECTS in ',infits,\
+                          ' at extension ',hdunum)
                     sys.exit(1);
                 hdu = f[hdunum]
                 hdu.header.extend(h)
@@ -83,7 +84,7 @@ def isFloat(s):
     except ValueError:
         return False
 
-defaultReferenceDay=(2012,11,01)
+defaultReferenceDay=(2012,11,1)
 """ Default start time for our day clock is 0h UT on Nov 1 2012"""
 
 def days(ymdhms, reference=defaultReferenceDay):
@@ -144,7 +145,7 @@ def sectionToSlices(sec):
     for r in reversed(ranges):
         r2 = r.split(':')
         if not len(r2)==2:
-            print 'Bad range in sectionToRange: ',r
+            print('Bad range in sectionToRange: ',r)
             return
         s = slice( int(r2[0])-1, int(r2[1]) )
         out += (s,)
