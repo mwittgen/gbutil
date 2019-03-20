@@ -25,6 +25,7 @@ const double  TPI           = 2.*PI;
 const double  DEGREE	    = PI/180.;               // One degree, in rad
 const double  GM            = 4.*PI*PI/1.000037773533;  //solar gravitation
 const double  ARCSEC	    = PI/180./3600.;
+const double  MILLIARCSEC   = 0.001*ARCSEC;
 const double  ARCMIN	    = PI/180./60.;
 const double  YEAR          = 1.;                    //Julian year
 const double  DAY	    = 1./365.25;	     //Julian day, 86400 s

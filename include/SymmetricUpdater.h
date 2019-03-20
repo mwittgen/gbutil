@@ -121,6 +121,80 @@ namespace linalg {
       omp_unset_lock(&locks[block]);
 #endif
     }
+
+    // Update submatrix with corner at (start1,start2)
+    // as alpha +=  M1^T * SM * M2 
+    // where SM is an m x m symmetric matrix,
+    // M1 is m x n1, M2 is m x n2, and
+    // (start1,start1+n1) is disjoint from (start2,start2+n2)
+    // so that update does not cross diagonal.
+    // seg[12] are numbers of the index segments in which v1 and v2 must lie.
+    // First version must have seg1!=seg2, i.e. does not cross diagonal
+    // Order will be swapped if needed to put this in lower triangle of alpha,
+    // i.e. we will use M2^T * SM * M1 as needed.
+    template<class M1, class SM, class M2>
+    void update(int seg1, int start1, const M1& m1, 
+		const SM& sm,
+		int seg2, int start2, const M2& m2) {
+      int n1 = m1.cols();
+      int n2 = m2.cols();
+      if (n1 <= 0 || n2 <=0) return; // Nothing to add.
+      if (seg1==seg2)
+	throw std::runtime_error("SymmetricUpdater got 2 equal segments");
+      if (seg1 < seg2) {
+	update(seg2,start2,m2,
+	       sm,
+	       seg1,start1,m1);  // Swap so seg1>=seg2.
+	return;
+      }
+#ifdef _OPENMP
+      // Get the block index corresponding to these 2 keys
+      int block = (seg1*(seg1+1)/2 + seg2)/ blockLength;
+      Assert(block < locks.size());
+      // Set lock for its region - will wait here if busy!
+      omp_set_lock(&locks[block]);
+#endif
+
+      alpha.subMatrix(start1, start1+n1, start2, start2+n2) +=
+	m1.transpose() * sm * m2;
+
+#ifdef _OPENMP
+      omp_unset_lock(&locks[block]);
+#endif
+    }
+  
+    // This updates with M^T * SM * M,
+    // where SM is m x m symmetric, and
+    // M is m x n matrix.  So we cross diagonal
+    template<class M, class SM>
+    void update(int seg, int start, const M& m, 
+		const SM& sm) {
+      int n = m.cols();
+      if (n<=0) return;
+      
+#ifdef _OPENMP
+      // Get the block index corresponding to these 2 keys
+      int block = (seg*(seg+3)/2)/ blockLength;
+      Assert(block < locks.size());
+      // Set lock for its region - will wait here if busy!
+      omp_set_lock(&locks[block]);
+#endif
+      // Use package's symmetric-matrix routine if possible
+#ifdef USE_TMV
+      tmv::SymMatrix<double> tmp = m.transpose() * sm * m;
+      tmv::SymMatrixViewOf(alpha.subMatrix(start, start+n,
+					   start, start+n),
+			   tmv::Lower) += tmp;
+#elif defined USE_EIGEN
+      DMatrix tmp = m.transpose() * sm * m; // Can we save 2x???
+      alpha.subMatrix(start, start+n,start, start+n)
+	+= tmp;
+#endif
+#ifdef _OPENMP
+      omp_unset_lock(&locks[block]);
+#endif
+    }
+
   private:
     linalg::Matrix<double>& alpha;
     int nSegs;
@@ -131,6 +205,7 @@ namespace linalg {
     std::vector<omp_lock_t> locks;
 #endif
   };
+
 } // end namespace linalg
 
 #endif  // SYMMETRICUPDATER_H
