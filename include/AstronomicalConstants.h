@@ -31,9 +31,9 @@ const double  YEAR          = 1.;                    //Julian year
 const double  DAY	    = 1./365.25;	     //Julian day, 86400 s
 const double  HOUR          = DAY/24.;
 const double  MINUTE        = HOUR/60.;
-const double  SECOND        = MINUTE/60.;
+const double  TIMESEC       = MINUTE/60.;   // Note SECOND is name conflict with MKL
 const double  METER         = 1./AU;
-const double  SpeedOfLightAU= SpeedOfLight/AU/SECOND; //in AU/YR
+const double  SpeedOfLightAU= SpeedOfLight/AU/TIMESEC; //in AU/YR
 // Gauss's constant, DE430 defined value, = sqrt(GM_sun) to w/in errors
 const double  GaussK        = 0.01720209895 / DAY;         //
 
