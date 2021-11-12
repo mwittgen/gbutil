@@ -1,6 +1,6 @@
 # These should come from environment:
 # CXX
-# CXXFLAGS
+CXXFLAGS = -fPIC
 
 # TMV_DIR
 # FFTW_DIR

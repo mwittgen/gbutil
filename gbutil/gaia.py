@@ -1,7 +1,7 @@
 # From Alex Drlica Wagner
 # https://cdcvs.fnal.gov/redmine/projects/des-sci-release/repository/entry/users/kadrlica/catalog_coadd/trunk/code/utils.py#L275
 import warnings
-from astroquery.vizier import Vizier
+#from astroquery.vizier import Vizier
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 import astropy.io.fits as pf

@@ -133,11 +133,13 @@ Poly2d::create(const YAML::Node& node,
   bool useSum = node["SumOrder"].as<bool>();
   if (!node["OrderX"])
     throw Poly2dError("Missing YAML key <OrderX> for Poly2d");
-  orderX = node["OrderX"].as<int>();
+  //orderX = node["OrderX"].as<int>();
+  orderX = stoi(node["OrderX"].as<string>());
   if (!useSum) {
     if (!node["OrderY"])
       throw Poly2dError("Missing YAML key <OrderY> for Poly2d");
-    orderY = node["OrderY"].as<int>();
+    //orderY = node["OrderY"].as<int>();
+    orderY = stoi(node["OrderY"].as<string>());
   }
    
   Poly2d* poly = useSum ? new Poly2d(orderX) :new Poly2d(orderX, orderY);
@@ -145,7 +147,13 @@ Poly2d::create(const YAML::Node& node,
   // Read coefficients, set to zero if absent:
   DVector coeffs(poly->nCoeffs(), 0.);
   if (node["Coefficients"]) {
-    vector<double> v = node["Coefficients"].as<vector<double> >();
+    //vector<double> v = node["Coefficients"].as<vector<double> >();
+    vector<string> vStr = node["Coefficients"].as<vector<string> >();
+    vector<double> v(vStr.size());
+    transform(vStr.begin(), vStr.end(), v.begin(), [](const string& val)
+    {
+    return std::stod(val);
+    });
     if (v.size() != coeffs.size()) {
       cerr << v.size() << " " << coeffs.size() << endl;
       throw Poly2dError("Wrong Coefficient count for Poly2d::create(YAML)");
