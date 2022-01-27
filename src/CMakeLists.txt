@@ -4,7 +4,7 @@ add_library(${PROJECT_NAME} SHARED BinomFact.cpp Expressions.cpp Lookup1d.cpp Po
 target_include_directories(${PROJECT_NAME} PUBLIC
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
-target_include_directories(${PROJECT_NAME} PUBLIC $ENV{EIGEN_DIR}/include/eigen3)
+target_link_libraries(${PROJECT_NAME}  Eigen3::Eigen)
 
 # installation
 include(GNUInstallDirs)
