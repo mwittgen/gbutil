@@ -1,9 +1,10 @@
 add_library(${PROJECT_NAME} SHARED BinomFact.cpp Expressions.cpp Lookup1d.cpp Poly2d.cpp Shear.cpp 
     Table.cpp odeint.cpp Interpolant.cpp Poisson.cpp Pset.cpp StringStuff.cpp fft.cpp)
 
-target_include_directories(${PROJECT_NAME} PUBLIC
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+target_include_directories(${PROJECT_NAME} INTERFACE 
+    $<INSTALL_INTERFACE:include>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
+target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(${PROJECT_NAME}  Eigen3::Eigen)
 
 # installation
